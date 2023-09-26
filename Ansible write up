@@ -1,0 +1,19 @@
+Ansible Playbook Explanation for Business
+This Ansible playbook is designed to automate various tasks related to host management and data gathering for business purposes. Here's a breakdown of its key components:
+* 		Target Hosts:
+    * The playbook targets hosts named "Kibana" and "Elastic" for these tasks.
+* 		Task 1: Create File
+    * Ansible creates an empty file named "output.csv" on the local machine (the machine where Ansible is run).
+* 		Task 2: Get Hostname
+    * Ansible retrieves the hostname of the local machine and stores it for later use.
+* 		Task 3: Get Current Date
+    * Ansible retrieves the current date and time from the local machine and stores it.
+* 		Task 4: Gather Hostnames
+    * Ansible combines the host groups "Kibana" and "Elastic" and stores the result in a variable.
+* 		Task 5: Check Elastic  beat Boot Service
+    * Ansible checks if a specific systemd service file ("Kibana.boot.service") exists on the local machine.
+* 		Task 6: Check Elastic Boot Service
+    * Ansible checks the existence of another systemd service file ("Elastic-9200-boot.service") on the local machine.
+* 		Task 7: Write to output.csv
+    * Ansible appends information to the "output.csv" file. It records the hostname of each target host, the local machine's hostname, the current date and time, the status of the Kibana boot service, and the status of the Elastic boot service.
+This playbook helps automate data collection and status checks for business operations, making it easier to manage and monitor systems.
