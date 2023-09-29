@@ -20,3 +20,19 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             {{- toYaml .Values.env | nindent 12 }}
+
+
+replicaCount: 1
+
+image:
+  repository: docker.elastic.co/beats/elastic-agent-complete
+  tag: 8.10.2
+  pullPolicy: IfNotPresent
+
+env:
+  - name: FLEET_ENROLL
+    value: "1"
+  - name: FLEET_URL
+    value: "{fleet-server-host-url}"
+  - name: FLEET_ENROLLMENT_TOKEN
+    value: "{enrollment-token}"
