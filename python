@@ -1,0 +1,46 @@
+import time
+
+def generate_schedule(servers_list):
+    # Parse the servers list
+    nodes = {}
+    for line in servers_list:
+        parts = line.split(' ')
+        node_name = parts[0]
+        rack = parts[2].split('=')[1]
+        # For this example, I'm assuming a default state of 'hot' for all nodes.
+        # You can adjust this or add more logic to determine the state if needed.
+        state = 'hot'
+        nodes[node_name] = {'rack': rack, 'state': state}
+
+    # Define start intervals
+    interval_between_starts = 10 * 60  # 10 minutes in seconds
+    rack_delay = 60 * 60  # 1 hour in seconds
+
+    # Sort nodes by rack
+    sorted_nodes = sorted(nodes.keys(), key=lambda x: nodes[x]['rack'])
+
+    start_time = time.time()  # current time
+    schedule = {}
+
+    for node in sorted_nodes:
+        # Add delay if same rack as previous node
+        if node != sorted_nodes[0] and nodes[node]['rack'] == nodes[sorted_nodes[sorted_nodes.index(node) - 1]]['rack']:
+            start_time += rack_delay
+        else:
+            start_time += interval_between_starts
+
+        schedule[node] = time.strftime('%H:%M', time.localtime(start_time))
+
+    # Print the schedule
+    for node, start in schedule.items():
+        print(f"{start} - Start {node} ({nodes[node]['state'].capitalize()} state, Rack {nodes[node]['rack']})")
+
+# Sample input
+servers_input = """
+server1 rack=1
+server2 rack=2
+server3 rack=3
+server4 rack=1
+"""
+
+generate_schedule(servers_input.strip().split('\n'))
