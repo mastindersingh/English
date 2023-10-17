@@ -1,0 +1,8 @@
+{"metadata": {"service": {"name": "my_service", "agent": {"name": "python", "version": "1.0"}}}}
+{"transaction": {"id": "abcd1234", "trace_id": "abcd1234abcd1234", "name": "GET /endpoint", "type": "request", "duration": 100, "timestamp": 1625000000000000}}
+
+
+curl -X POST "http://localhost:8200/intake/v2/events" \
+-H "Authorization: Bearer YOUR_UUID_TOKEN" \
+-H "Content-Type: application/x-ndjson" \
+--data-binary "@sample-data.ndjson"
