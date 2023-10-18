@@ -98,3 +98,72 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+from flask import Flask, render_template_string
+import requests
+from requests.auth import HTTPBasicAuth
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    # Credentials
+    username = 'your_username'
+    password = 'your_password'
+
+    # List of server URLs
+    servers = ["http://server1:5601", "http://server2:5601", "http://server3:5601"]  # Add more servers as needed
+
+    results = []
+
+    for server in servers:
+        response = requests.get(f"{server}/api/status", auth=HTTPBasicAuth(username, password))
+        data = response.json()
+
+        # Extract relevant data
+        status = data["status"]["overall"]["level"]
+        version = data["version"]["number"]
+        uptime_in_millis = data["metrics"]["process"]["uptime_in_millis"]
+
+        results.append({
+            "server": server,
+            "status": status,
+            "version": version,
+            "uptime_in_millis": uptime_in_millis
+        })
+
+    # HTML template with placeholders for data
+    template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>API Data</title>
+    </head>
+    <body>
+        <table border="1">
+            <tr>
+                <th>Server</th>
+                <th>Status</th>
+                <th>Version</th>
+                <th>Uptime (ms)</th>
+            </tr>
+            {% for result in results %}
+            <tr>
+                <td>{{ result.server }}</td>
+                <td>{{ result.status }}</td>
+                <td>{{ result.version }}</td>
+                <td>{{ result.uptime_in_millis }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+    </html>
+    """
+
+    # Render HTML with data
+    return render_template_string(template, results=results)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
