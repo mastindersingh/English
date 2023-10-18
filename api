@@ -43,3 +43,58 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
+
+
+from flask import Flask, render_template_string
+import requests
+from requests.auth import HTTPBasicAuth
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    # Credentials
+    username = 'your_username'
+    password = 'your_password'
+
+    # Get JSON data from API
+    response = requests.get("http://localhost:5601/api/status", auth=HTTPBasicAuth(username, password))
+    data = response.json()
+
+    # Extract relevant data
+    status = data["status"]["overall"]["level"]
+    version = data["version"]["number"]
+    uptime_in_millis = data["metrics"]["process"]["uptime_in_millis"]
+
+    # HTML template with placeholders for data
+    template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>API Data</title>
+    </head>
+    <body>
+        <table border="1">
+            <tr>
+                <th>Status</th>
+                <th>Version</th>
+                <th>Uptime (ms)</th>
+            </tr>
+            <tr>
+                <td>{{ status }}</td>
+                <td>{{ version }}</td>
+                <td>{{ uptime_in_millis }}</td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
+    # Render HTML with data
+    return render_template_string(template, status=status, version=version, uptime_in_millis=uptime_in_millis)
+
+if __name__ == "__main__":
+    app.run(debug=True)
