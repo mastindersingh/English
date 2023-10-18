@@ -1,0 +1,60 @@
+from flask import Flask, render_template_string
+import requests
+from requests.auth import HTTPBasicAuth
+
+app = Flask(__name__)
+
+def generate_urls(cluster_identifier, endpoint):
+    if endpoint == "status" and cluster_identifier in ["prod1", "prod2", "prod3"]:  # Add other clusters if needed
+        # For these clusters, use instance-specific URLs for the status endpoint
+        instances = {
+            "prod1": ["", ""],
+            "prod2": ["instance1_for_prod2", "instance2_for_prod2"],
+            "prod3": ["instance1_for_prod3", "instance2_for_prod3"],
+            # ... add more clusters and their instances as needed
+        }
+        return [f"https://{instance}/api/status" for instance in instances[cluster_identifier]]
+    else:
+        base_url = f"https://{cluster_identifier}-elasticserch.com"
+        if endpoint == "status":
+            return [f"{base_url}/api/status"]
+        elif endpoint == "health":
+            return [f"{base_url}/_cluster/health"]
+
+@app.route("/")
+def home():
+    # Credentials
+    username = 'your_username'
+    password = 'your_password'
+
+    clusters = [f"prod{i}" for i in range(1, 8)]
+    results = []
+
+    for cluster in clusters:
+        status_urls = generate_urls(cluster, "status")
+        health_url = generate_urls(cluster, "health")[0]  # Only one URL for health
+
+        for status_url in status_urls:
+            status_response = requests.get(status_url, auth=HTTPBasicAuth(username, password))
+            health_response = requests.get(health_url, auth=HTTPBasicAuth(username, password))
+
+            status_data = status_response.json()
+            health_data = health_response.json()
+
+            cluster_name = status_data.get("cluster_name", "N/A")
+
+            combined_data = {
+                "cluster_identifier": cluster,
+                "name": status_data["name"],
+                "version": status_data["version"]["number"],
+                "os_platform": status_data["metrics"]["os"]["platform"],
+                "apm_status": status_data["status"]["plugins"]["apm"]["level"],
+                "cluster_name": cluster_name,
+                "cluster_status": health_data["status"],
+                "number_of_nodes": health_data["number_of_nodes"],
+                "active_shards": health_data["active_shards"]
+            }
+
+            results.append(combined_data)
+
+    # ... [rest of your code]
