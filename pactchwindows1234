@@ -250,3 +250,67 @@ server4 rack=1
 
 generate_schedule(servers_input.strip().split('\n'))
 
+
+import datetime
+
+def generate_schedule(servers_list):
+    # Parse the servers list
+    nodes = {}
+    for line in servers_list:
+        parts = line.split(' ')
+        node_name = parts[0]
+        rack = parts[1].split('=')[1]
+        state = 'hot'
+        nodes[node_name] = {'rack': rack, 'state': state}
+
+    # Define start intervals
+    days_between_starts = 1  # Patch servers every day for distribution
+    rack_delay = datetime.timedelta(hours=1)
+
+    # Sort nodes by rack
+    sorted_nodes = sorted(nodes.keys(), key=lambda x: (nodes[x]['rack'], x))
+
+    # Start from the beginning of the month
+    start_time = datetime.datetime(2023, 10, 1, 0, 0)  # Adjust the year and month as needed
+    schedule = {}
+    last_rack = None
+
+    for node in sorted_nodes:
+        # Check if the current time is outside the first patching window and adjust to the second window
+        if start_time.hour >= 4 and start_time.hour < 18:
+            start_time = datetime.datetime(start_time.year, start_time.month, start_time.day, 18, 0)
+        # If outside the second window, move to the next day's first window
+        elif start_time.hour >= 22:
+            start_time += datetime.timedelta(days=days_between_starts)
+            start_time = datetime.datetime(start_time.year, start_time.month, start_time.day, 0, 0)
+
+        # If the current server's rack is the same as the last server's rack, move to the next window or day
+        if last_rack == nodes[node]['rack']:
+            if start_time.hour < 4:
+                start_time = datetime.datetime(start_time.year, start_time.month, start_time.day, 18, 0)
+            else:
+                start_time += datetime.timedelta(days=days_between_starts)
+                start_time = datetime.datetime(start_time.year, start_time.month, start_time.day, 0, 0)
+
+        # Ensure the schedule doesn't exceed 30 days
+        if start_time.day > 30:
+            continue
+
+        schedule[node] = start_time.strftime('%Y-%m-%d %H:%M')
+        last_rack = nodes[node]['rack']
+
+    # Print the schedule
+    for node, start in schedule.items():
+        print(f"{start} - Start {node} ({nodes[node]['state'].capitalize()} state, Rack {nodes[node]['rack']})")
+
+# Sample input
+servers_input = """
+server1 rack=1
+server2 rack=2
+server3 rack=3
+server4 rack=1
+"""
+
+generate_schedule(servers_input.strip().split('\n'))
+
+
