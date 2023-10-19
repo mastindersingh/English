@@ -47,3 +47,61 @@ patching_schedule = generate_patching_schedule(servers_input)
 # Print the patching schedule
 for window, server_list in patching_schedule.items():
     print(f"{window}: {', '.join(server_list)}")
+
+
+
+
+import datetime
+
+# Sample input list
+servers_input = """
+server1 rack=1
+server2 rack=3
+server3 rack=5
+server4 rack=1
+"""
+
+def generate_patching_schedule(servers_list):
+    # Parse the servers list to get server names and their racks
+    servers_rack = {line.split(' ')[0]: line.split(' ')[1].split('=')[1] for line in servers_list}
+    
+    # Calculate the number of servers to patch in each window
+    total_windows_in_month = 2 * 30  # Two windows daily for 30 days
+    servers_per_window = len(servers_rack) // total_windows_in_month
+    servers_per_window = max(1, servers_per_window)  # Ensure at least one server per window
+
+    # Distribute servers across the patching windows ensuring rack awareness
+    schedule = {}
+    used_servers = set()
+
+    for day in range(1, 31):  # For each day of the month
+        for window in ["0 to 4 PM PST", "6 PM to 10 PM PST"]:
+            servers_for_this_window = []
+            used_racks = set()
+            
+            for server, rack in servers_rack.items():
+                if server not in used_servers and rack not in used_racks:
+                    servers_for_this_window.append(server)
+                    used_racks.add(rack)
+                    used_servers.add(server)
+                    if len(servers_for_this_window) == servers_per_window:
+                        break
+            
+            # If we're at the end of the month and there are still servers left to patch, add them to the schedule
+            if day == 30 and window == "6 PM to 10 PM PST":
+                remaining_servers = [s for s in servers_rack.keys() if s not in used_servers]
+                servers_for_this_window.extend(remaining_servers)
+            
+            if servers_for_this_window:
+                date_str = datetime.date(2023, 10, day).strftime('%Y-%m-%d')  # Adjust the year and month as needed
+                schedule_key = f"{date_str} {window}"
+                schedule[schedule_key] = servers_for_this_window
+
+    return schedule
+
+patching_schedule = generate_patching_schedule(servers_input.strip().split('\n'))
+
+# Print the patching schedule
+for window, server_list in patching_schedule.items():
+    print(f"{window}: {', '.join(server_list)}")
+
