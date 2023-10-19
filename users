@@ -1,0 +1,16 @@
+import requests
+import re
+
+# Elasticsearch endpoint and credentials
+es_url = "http://your_elasticsearch_url:9200"
+auth = ("your_username", "your_password")
+
+# Fetch users from Elasticsearch
+response = requests.get(f"{es_url}/_security/user", auth=auth)
+users = response.json()
+
+# Filter users based on email pattern
+pattern = r"^[a-zA-Z]+\.[a-zA-Z]+@wellsfargo\.com$"
+filtered_users = {k: v for k, v in users.items() if re.match(pattern, v.get('email', ''))}
+
+print(filtered_users)
