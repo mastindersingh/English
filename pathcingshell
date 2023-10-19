@@ -48,4 +48,61 @@ for day in $(seq 1 30); do
             echo "$day: $window: $csv"
         fi
     done
+done]
+
+
+
+
+#!/bin/bash
+
+# Read the server list from serverlist.txt
+servers_input=$(cat serverlist.txt)
+
+# Convert the servers_input into an associative array with server as key and rack as value
+declare -A servers_rack
+while read -r line; do
+    server=$(echo "$line" | awk '{print $1}')
+    rack=$(echo "$line" | awk '{print $2}' | sed 's/rack=//')
+    servers_rack["$server"]=$rack
+done <<< "$servers_input"
+
+# Function to get servers for a patching window while ensuring rack awareness
+get_servers_for_window() {
+    local -n result=$1
+    local count=$2
+    local used_racks=()
+
+    for server in "${!servers_rack[@]}"; do
+        rack=${servers_rack[$server]}
+        if [[ ! " ${used_racks[@]} " =~ " ${rack} " ]]; then
+            result+=("$server")
+            unset servers_rack["$server"]
+            used_racks+=("$rack")
+            if [[ ${#result[@]} -eq $count ]]; then
+                break
+            fi
+        fi
+    done
+}
+
+# Calculate the number of servers to patch in each window
+total_windows_in_month=60  # Two windows daily for 30 days
+servers_per_window=$(( ${#servers_rack[@]} / total_windows_in_month ))
+
+# Distribute servers across the patching windows
+for day in $(seq 1 30); do
+    for window in "0 to 4 AM PST" "6 PM to 10 PM PST"; do
+        # Extract servers for this window with rack awareness
+        current_servers=()
+        get_servers_for_window current_servers $servers_per_window
+
+        # Convert array to comma-separated string
+        csv=$(echo "${current_servers[@]}" | tr ' ' ',')
+
+        # Print the results
+        if [ ! -z "$csv" ]; then
+            echo "$day: $window: $csv"
+        fi
+    done
 done
+
