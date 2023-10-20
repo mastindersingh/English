@@ -1,0 +1,13 @@
+import pandas as pd
+
+# Read the patching schedule CSV file
+patching_schedule = pd.read_csv('path_to_patching_schedule.csv')
+
+# Extract the date from the start date column
+patching_schedule['start_date_only'] = pd.to_datetime(patching_schedule['start_date'], format='%m/%d/%Y %H:%M').dt.date
+
+# Count the number of servers patched per day
+patched_per_day = patching_schedule.groupby('start_date_only').size()
+
+# Print the results
+print(patched_per_day)
