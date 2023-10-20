@@ -2,3 +2,5 @@
 
 =DATEVALUE(MID(B1, 1, 10))
 
+
+=DATE(YEAR(Start Date), MONTH(Start Date), DAY(Start Date))
