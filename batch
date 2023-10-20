@@ -1,0 +1,48 @@
+import time
+
+def generate_schedule(servers_list):
+    # Parse the servers list
+    nodes = {}
+    for line in servers_list:
+        parts = line.split(' ')
+        node_name = parts[0]
+        rack = parts[1].split('=')[1]
+        state = 'hot'
+        nodes[node_name] = {'rack': rack, 'state': state}
+
+    # Define start intervals
+    interval_between_starts = 10 * 60  # 10 minutes in seconds
+    rack_delay = 60 * 60  # 1 hour in seconds
+
+    # Group nodes by rack
+    racks = {}
+    for node, details in nodes.items():
+        if details['rack'] not in racks:
+            racks[details['rack']] = []
+        racks[details['rack']].append(node)
+
+    start_time = time.time()  # current time
+    schedule = {}
+
+    # While there are still nodes to patch
+    while nodes:
+        for rack, rack_nodes in racks.items():
+            if rack_nodes:
+                node = rack_nodes.pop(0)
+                start_time += interval_between_starts
+                schedule[node] = time.strftime('%H:%M', time.localtime(start_time))
+                del nodes[node]
+
+    # Print the schedule
+    for node, start in schedule.items():
+        print(f"{start} - Start {node} ({nodes[node]['state'].capitalize()} state, Rack {nodes[node]['rack']})")
+
+# Sample input
+servers_input = """
+server1 rack=1
+server2 rack=2
+server3 rack=3
+server4 rack=1
+"""
+
+generate_schedule(servers_input.strip().split('\n'))
