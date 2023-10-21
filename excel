@@ -3,4 +3,6 @@
 =DATEVALUE(MID(B1, 1, 10))
 
 
+=SUMPRODUCT((B1<=DATE(YEAR(B1), MONTH(B1), DAY(B1)+1))*(C1>=DATE(YEAR(B1), MONTH(B1), DAY(B1))))
+
 =DATE(YEAR(Start Date), MONTH(Start Date), DAY(Start Date))
