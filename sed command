@@ -3,3 +3,5 @@ sed 's/ \(rack=[0-9]*\)/ , \1/' inputfile.txt > outputfile.txt
 sed 's/\(server[0-9]*\) rack=/\1 , rack=/' inputfile.txt > outputfile.txt
 sed -e 's/\(server[0-9]*\) rack=/\1 , rack=/' -e 's/$/ , hot/' inputfile.txt > outputfile.txt
 
+sed -e 's/\(server[0-9]*\) rack=/\1 , rack=/' -e 's/$/ , hot/' inputfile.txt > outputfile.txt
+
