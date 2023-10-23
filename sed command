@@ -7,4 +7,7 @@ sed -e 's/\(server[0-9]*\) rack=/\1 , rack=/' -e 's/$/ , hot/' inputfile.txt > o
 
 awk '{print toupper($1)}' inputfile.txt | sed -e 's/\(SERVER[0-9]*\) RACK=/\1 , rack=/' -e 's/$/ , hot/' > outputfile.txt
 
+awk '{print toupper($1) $2}' inputfile.txt | sed -e 's/\(SERVER[0-9]*\) \(rack=[0-9]*\)/\1 , \2 , hot/' > outputfile.txt
+
+
 
