@@ -1,0 +1,2 @@
+sed 's/ \(rack=[0-9]*\)/ , \1/' inputfile.txt > outputfile.txt
+=SUBSTITUTE(A1, " rack=", " , rack=")
