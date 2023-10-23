@@ -9,5 +9,8 @@ awk '{print toupper($1)}' inputfile.txt | sed -e 's/\(SERVER[0-9]*\) RACK=/\1 , 
 
 awk '{print toupper($1) $2}' inputfile.txt | sed -e 's/\(SERVER[0-9]*\) \(rack=[0-9]*\)/\1 , \2 , hot/' > outputfile.txt
 
+awk '{printf "%s, %s, hot\n", toupper($1), $2}' inputfile.txt > outputfile.txt
+
+
 
 
