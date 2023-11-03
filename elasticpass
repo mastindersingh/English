@@ -1,0 +1,45 @@
+---
+- name: Check for missing ILM policies on Elasticsearch indices
+  hosts: localhost
+  vars:
+    es_host: "your_elasticsearch_server:9200"
+    es_user: "your_username"
+    es_pass: "your_password"
+  tasks:
+    - name: Get list of all indices from Elasticsearch
+      uri:
+        url: "http://{{ es_host }}/_cat/indices?format=json"
+        method: GET
+        return_content: yes
+        body_format: json
+        url_username: "{{ es_user }}"
+        url_password: "{{ es_pass }}"
+        validate_certs: no # Set to yes if your Elasticsearch uses valid SSL certificates
+      register: indices_result
+
+    - name: Set fact for indices info
+      set_fact:
+        indices_info: "{{ indices_result.json }}"
+
+    - name: Check each index for ILM policy
+      uri:
+        url: "http://{{ es_host }}/{{ item.index }}/_ilm/explain"
+        method: GET
+        return_content: yes
+        body_format: json
+        url_username: "{{ es_user }}"
+        url_password: "{{ es_pass }}"
+        validate_certs: no # Set to yes if your Elasticsearch uses valid SSL certificates
+      register: ilm_result
+      loop: "{{ indices_info }}"
+      loop_control:
+        loop_var: item
+      ignore_errors: yes
+
+    - name: Identify indices without ILM policies
+      debug:
+        msg: "Index {{ item.item.index }} is missing an ILM policy."
+      when: "'error' in item.json and item.json.error.reason == 'policy not found'"
+      loop: "{{ ilm_result.results }}"
+      loop_control:
+        label: "{{ item.item.index }}"
