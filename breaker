@@ -1,0 +1,15 @@
+GET .monitoring-es-*/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "term": { "type": "node_stats" } },
+        { "exists": { "field": "node_stats.breakers" } }
+      ]
+    }
+  },
+  "sort": [
+    { "timestamp": { "order": "desc" } }
+  ],
+  "_source": ["timestamp", "node_stats.node_id", "node_stats.breakers"]
+}
