@@ -1,0 +1,51 @@
+- name: Check for missing ILM policies on Elasticsearch indices
+  hosts: localhost
+  vars:
+    es_host: ""
+    es_user: ""  # Replace with the actual username for Elasticsearch
+    es_pass: "your_password"  # Replace with the actual password for Elasticsearch
+    output_csv: "/tmp/missing_ilm_policies.csv"  # Replace with the desired output path
+  tasks:
+    - name: Get list of all indices from Elasticsearch
+      uri:
+        url: "https://{{ es_host }}/_cat/indices?format=json"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ es_pass }}"
+        validate_certs: no  # This will ignore SSL certificate verification
+        force_basic_auth: yes
+      register: indices_result
+
+    - name: Set fact for indices info
+      set_fact:
+        indices_info: "{{ indices_result.json }}"
+
+    - name: Check each index for ILM policy
+      uri:
+        url: "https://{{ es_host }}/{{ item.index }}/_ilm/explain"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ es_pass }}"
+        validate_certs: no  # This will ignore SSL certificate verification
+        force_basic_auth: yes
+      register: ilm_result
+      loop: "{{ indices_info }}"
+      loop_control:
+        loop_var: item
+      ignore_errors: yes
+
+    - name: Create list of indices without ILM policies
+      set_fact:
+        missing_ilm_indices: "{{ missing_ilm_indices | default([]) + [item.item.index] }}"
+      when: "'error' in item.json and item.json.error.reason == 'policy not found'"
+      loop: "{{ ilm_result.results }}"
+      loop_control:
+        label: "{{ item.item.index }}"
+
+    - name: Write indices without ILM policies to CSV
+      copy:
+        content: "{{ missing_ilm_indices | map('regex_replace', '^(.*)$', '\\1') | join('\n') }}"
+        dest: "{{ output_csv }}"
+      when: missing_ilm_indices | default([]) | length > 0
