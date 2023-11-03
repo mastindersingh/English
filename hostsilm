@@ -1,0 +1,10 @@
+- name: Get list of all indices from Elasticsearch
+  uri:
+    url: "https://{{ es_host }}/_cat/indices?format=json"
+    method: GET
+    return_content: yes
+    body_format: json
+    url_username: "{{ es_user }}"
+    url_password: "{{ es_pass }}"
+    validate_certs: no
+  register: indices_result
