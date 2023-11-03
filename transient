@@ -1,0 +1,5 @@
+ere's what shard allocation filtering does during patching:
+
+Prevent Shard Reallocation: When you're about to patch a node, you don't want Elasticsearch to start reallocating shards to or from that node. Moving shards can be resource-intensive and could interfere with the patching process.
+
+Control Shard Placement: If you're patching nodes one by one, you can ensure that Elasticsearch doesn't allocate new shards to the nodes that are about to be, or currently are being, patched.
