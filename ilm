@@ -1,0 +1,59 @@
+- name: Retrieve all indices and their ILM policies
+  hosts: localhost
+  vars:
+    es_host:""
+    es_user: ""
+    es_pass: "G"
+    output_csv: "/tmp/iaindices_ilm_policies.csv"  # Change the /tmp to /new/path or any desired path
+  tasks:
+    - name: Get list of all indices from Elasticsearch
+      uri:
+        url: "https://{{ es_host }}/_cat/indices?format=json"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ es_pass }}"
+        validate_certs: no
+        force_basic_auth: yes
+      register: indices_result
+
+    - name: Set fact for indices info
+      set_fact:
+        indices_info: "{{ indices_result.json }}"
+
+    - name: Check ILM policy for each index
+      uri:
+        url: "https://{{ es_host }}/{{ item.index }}/_ilm/explain"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ es_pass }}"
+        validate_certs: no
+        force_basic_auth: yes
+      register: ilm_result
+      loop: "{{ indices_info }}"
+      loop_control:
+        loop_var: item
+      ignore_errors: yes
+
+    - name: Create list of indices with their ILM policy status and details
+      set_fact:
+        indices_ilm_info: >-
+          {{ indices_ilm_info | default([]) + 
+          [{ 'index': item.item.index, 
+             'ilm_policy': (item.json.indices[item.item.index].policy if 'policy' in item.json.indices[item.item.index] else 'None'), 
+             'time_since_index_creation': (item.json.indices[item.item.index].time_since_index_creation if 'time_since_index_creation' in item.json.indices[item.item.index] else 'Not available') 
+          }] }}
+      loop: "{{ ilm_result.results }}"
+      loop_control:
+        loop_var: item
+
+    - name: Convert list of indices and ILM policies to CSV format
+      set_fact:
+        csv_content: "Index,ILM Policy,Time Since Index Creation\n{% for item in indices_ilm_info %}{{ item.index }},{{ item.ilm_policy }},{{ item.time_since_index_creation }}\n{% endfor %}"
+
+    - name: Write indices and their ILM policies to CSV
+      copy:
+        content: "{{ csv_content }}"
+        dest: "{{ output_csv }}"
+      delegate_to: localhost
