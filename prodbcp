@@ -5,10 +5,10 @@ from requests.auth import HTTPBasicAuth
 app = Flask(__name__)
 
 def generate_url(cluster_identifier, endpoint):
-    if "oxm" in cluster_identifier:
-        base_url = f"https://{cluster_identifier}-"
+    if "ox" in cluster_identifier:
+        base_url = f"https://{cluster_identifier}-api.net"
     else:
-        base_url = f"https://{cluster_identifier}-api-e"
+        base_url = f"https://{cluster_identifier}-api-.com"
 
     if endpoint == "status":
         return f"{base_url}/api/status"
@@ -30,26 +30,34 @@ def home():
         status_url = generate_url(cluster, "status")
         health_url = generate_url(cluster, "health")
 
-        status_response = requests.get(status_url, auth=HTTPBasicAuth(username, password))
-        health_response = requests.get(health_url, auth=HTTPBasicAuth(username, password))
+        try:
+            status_response = requests.get(status_url, auth=HTTPBasicAuth(username, password))
+            health_response = requests.get(health_url, auth=HTTPBasicAuth(username, password))
 
-        status_data = status_response.json()
-        health_data = health_response.json()
+            status_response.raise_for_status()
+            health_response.raise_for_status()
 
-        combined_data = {
-            "cluster_identifier": cluster,
-            "cluster_type": cluster_type,
-            "name": status_data["name"],
-            "version": status_data["version"]["number"],
-            "os_platform": status_data["metrics"]["os"]["platform"],
-            "apm_status": status_data["status"]["plugins"]["apm"]["level"],
-            "cluster_name": health_data["cluster_name"],
-            "cluster_status": health_data["status"],
-            "number_of_nodes": health_data["number_of_nodes"],
-            "active_shards": health_data["active_shards"]
-        }
+            status_data = status_response.json()
+            health_data = health_response.json()
 
-        results.append(combined_data)
+            combined_data = {
+                "cluster_identifier": cluster,
+                "cluster_type": cluster_type,
+                "name": status_data.get("name", "N/A"),
+                "version": status_data.get("version", {}).get("number", "N/A"),
+                "os_platform": status_data.get("metrics", {}).get("os", {}).get("platform", "N/A"),
+                "apm_status": status_data.get("status", {}).get("plugins", {}).get("apm", {}).get("level", "N/A"),
+                "cluster_name": health_data.get("cluster_name", "N/A"),
+                "cluster_status": health_data.get("status", "N/A"),
+                "number_of_nodes": health_data.get("number_of_nodes", "N/A"),
+                "active_shards": health_data.get("active_shards", "N/A")
+            }
+
+            results.append(combined_data)
+        except requests.RequestException as e:
+            print(f"Error fetching data for cluster {cluster}: {e}")
+        except KeyError as e:
+            print(f"Key error: {e} in response data for cluster {cluster}")
 
     # HTML template with placeholders for data
     template = """
