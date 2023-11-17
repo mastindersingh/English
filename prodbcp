@@ -5,15 +5,19 @@ from requests.auth import HTTPBasicAuth
 app = Flask(__name__)
 
 def generate_url(cluster_identifier, endpoint):
-    if "ox" in cluster_identifier:
-        base_url = f"https://{cluster_identifier}-api.net"
+    base_url = ""
+    if "oxm" in cluster_identifier:
+        if endpoint == "status":
+            base_url = f"https://{cluster_identifier}-elasticsearch.net"
+        elif endpoint == "health":
+            base_url = f"https://{cluster_identifier}-api-elasticsearch.net"
     else:
-        base_url = f"https://{cluster_identifier}-api-.com"
+        if endpoint == "status":
+            base_url = f"https://{cluster_identifier}-elasticsearch..com"
+        elif endpoint == "health":
+            base_url = f"https://{cluster_identifier}-api-elasticsearch.com"
 
-    if endpoint == "status":
-        return f"{base_url}/api/status"
-    elif endpoint == "health":
-        return f"{base_url}/_cluster/health"
+    return f"{base_url}/{endpoint}"
 
 @app.route("/")
 def home():
