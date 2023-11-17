@@ -1,0 +1,64 @@
+- hosts: localhost
+  vars:
+    es_hosts:
+      - "pro1:443"
+      - "pro:443"
+      # ... Add other hosts as needed
+    es_user: "elastic"
+    es_pass: ""
+  tasks:
+    - name: Get list of all indices from Elasticsearch for each host
+      uri:
+        url: "https://{{ item }}/_cat/indices?format=json"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ es_pass }}"
+        validate_certs: no
+        force_basic_auth: yes
+      loop: "{{ es_hosts }}"
+      register: indices_results
+      loop_control:
+        loop_var: "es_host"
+
+    - name: Check ILM policy for each index of each host
+      uri:
+        url: "https://{{ es_host }}/{{ index.index }}/_ilm/explain"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ es_pass }}"
+        validate_certs: no
+        force_basic_auth: yes
+      loop: "{{ item.json }}"
+      loop_control:
+        loop_var: "index"
+        extended: yes
+      register: ilm_results
+      with_items: "{{ indices_results.results }}"
+      when: item.json is defined and item.json != ''
+
+    - name: Create and write CSV content for each host
+      block:
+        - name: Create list of indices with their ILM policy status and details
+          set_fact:
+            indices_ilm_info: >-
+              {{ indices_ilm_info | default([]) + 
+              [{ 'index': index.item.index, 
+                 'ilm_policy': (index.json.indices[index.item.index].policy if 'policy' in index.json.indices[index.item.index] else 'None'), 
+                 'time_since_index_creation': (index.json.indices[index.item.index].time_since_index_creation if 'time_since_index_creation' in index.json.indices[index.item.index] else 'Not available') 
+              }] }}
+          loop: "{{ ilm_results.results }}"
+          when: ilm_results.results is defined and ilm_results.results != ''
+        
+        - name: Convert list of indices and ILM policies to CSV format
+          set_fact:
+            csv_content: "Index,ILM Policy,Time Since Index Creation\n{% for item in indices_ilm_info %}{{ item.index }},{{ item.ilm_policy }},{{ item.time_since_index_creation }}\n{% endfor %}"
+
+        - name: Write indices and their ILM policies to CSV for each host
+          copy:
+            content: "{{ csv_content }}"
+            dest: "/new/path/indices_ilm_policies_{{ es_host | replace(':', '_') | replace('.', '_') }}.csv"
+      loop: "{{ es_hosts }}"
+      loop_control:
+        loop_var: "es_host"
