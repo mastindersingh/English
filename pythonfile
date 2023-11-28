@@ -1,0 +1,23 @@
+import csv
+import json
+import requests
+
+# Convert CSV to JSON
+csv_file = '/path/to/your/csvfile.csv'
+json_data = []
+
+with open(csv_file, 'r') as file:
+    csv_reader = csv.DictReader(file)
+    for row in csv_reader:
+        json_data.append(json.dumps(row))
+
+# Elasticsearch Bulk Upload
+es_url = 'http://localhost:9200/ilmprod2/_bulk'
+headers = {'Content-Type': 'application/x-ndjson'}
+
+bulk_data = ''
+for record in json_data:
+    bulk_data += '{"index":{}}\n' + record + '\n'
+
+response = requests.post(es_url, headers=headers, data=bulk_data)
+print(response.text)
