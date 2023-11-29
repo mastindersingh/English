@@ -1,0 +1,13 @@
+PUT _ingest/pipeline/csv_pipeline
+{
+  "description": "A pipeline to parse CSV data",
+  "processors": [
+    {
+      "csv": {
+        "field": "message",
+        "target_fields": ["cluster", "index", "ilm_policy", "time_since_index_creation"],
+        "ignore_missing": false
+      }
+    }
+  ]
+}
