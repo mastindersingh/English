@@ -1,0 +1,60 @@
+ name: Retrieve all indices and their ILM policies
+  hosts: elasticsearch_hosts
+  connection: local  # Ensures Ansible makes local HTTP API calls
+  gather_facts: no
+  vars:
+    es_user: "elastic"
+    output_csv: "/tmp/indices_ilm_policies_{{ inventory_hostname }}.csv"
+  tasks:
+    - name: Get list of all indices from Elasticsearch
+      uri:
+        url: "https://{{ inventory_hostname }}/_cat/indices?format=json"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ hostvars[inventory_hostname].es_pass }}"
+        validate_certs: no
+        force_basic_auth: yes
+      register: indices_result
+
+    - name: Set fact for indices info
+      set_fact:
+        indices_info: "{{ indices_result.json }}"
+
+    - name: Check ILM policy for each index
+      uri:
+        url: "https://{{ inventory_hostname }}/{{ item.index }}/_ilm/explain"
+        method: GET
+        return_content: yes
+        user: "{{ es_user }}"
+        password: "{{ hostvars[inventory_hostname].es_pass }}"
+        validate_certs: no
+        force_basic_auth: yes
+      register: ilm_result
+      loop: "{{ indices_info }}"
+      loop_control:
+        loop_var: item
+      ignore_errors: yes
+
+    - name: Create list of indices with their ILM policy status and details
+      set_fact:
+        indices_ilm_info: >-
+          {{ indices_ilm_info | default([]) + 
+          [{ 'cluster': hostvars[inventory_hostname].cluster_name,
+             'index': item.item.index, 
+             'ilm_policy': (item.json.indices[item.item.index].policy if 'policy' in item.json.indices[item.item.index] else 'None'), 
+             'time_since_index_creation': (item.json.indices[item.item.index].time_since_index_creation if 'time_since_index_creation' in item.json.indices[item.item.index] else 'Not available') 
+          }] }}
+      loop: "{{ ilm_result.results }}"
+      loop_control:
+        loop_var: item
+
+    - name: Convert list of indices and ILM policies to CSV format
+      set_fact:
+        csv_content: "Cluster,Index,ILM Policy,Time Since Index Creation\n{% for item in indices_ilm_info %}{{ item.cluster }},{{ item.index }},{{ item.ilm_policy }},{{ item.time_since_index_creation }}\n{% endfor %}"
+
+    - name: Write indices and their ILM policies to CSV
+      copy:
+        content: "{{ csv_content }}"
+        dest: "{{ output_csv }}"
+      delegate_to: localhost
