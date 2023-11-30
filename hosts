@@ -1,0 +1,3 @@
+[elasticsearch_hosts]
+prod1.es.us-central1.gcp.cloud.es.io es_pass='OIDZVmgsxZ1RYEpeiSQr3Be2' cluster_name='Cluster1'
+prod2.es.asia-south1.gcp.elastic-cloud.com es_pass='M5y8BSTntW8m0DwVJAyAIRWJ' cluster_name='Cluster2'
