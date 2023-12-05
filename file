@@ -1,0 +1,111 @@
+ 
+from flask import Flask, render_template_string
+import requests
+from requests.auth import HTTPBasicAuth
+from datetime import datetime
+
+app = Flask(__name__)
+
+def generate_es_health_report_url(cluster_identifier):
+    if cluster_identifier == "Cluster1":
+        return "https://prod1.es.us-central1.gcp.cloud.es.io/_health_report"
+    elif cluster_identifier == "Cluster2":
+        return "https://prod2.es.asia-south1.gcp.elastic-cloud.com/_health_report"
+
+def generate_kb_status_url(cluster_identifier):
+    if cluster_identifier == "Cluster1":
+        return "https://prod1.kb.us-central1.gcp.cloud.es.io:9243/api/status"
+    elif cluster_identifier == "Cluster2":
+        return "https://prod2.kb.asia-south1.gcp.elastic-cloud.com:9243/api/status"
+
+def get_credentials(cluster_identifier):
+    if cluster_identifier == "Cluster1":
+        return ('elastic', 'OIDZVmgsxZ1RYEpeiSQr3Be2')
+    elif cluster_identifier == "Cluster2":
+        return ('elastic', 'M5y8BSTntW8m0DwVJAyAIRWJ')
+
+@app.route("/")
+def home():
+    clusters = ["Cluster1", "Cluster2"]
+    results = []
+    today_date = datetime.now().strftime("%Y-%m-%d")
+
+    for cluster in clusters:
+        es_url = generate_es_health_report_url(cluster)
+        kb_url = generate_kb_status_url(cluster)
+        username, password = get_credentials(cluster)
+
+        try:
+            es_response = requests.get(es_url, auth=HTTPBasicAuth(username, password))
+            kb_response = requests.get(kb_url, auth=HTTPBasicAuth(username, password))
+
+            es_response.raise_for_status()
+            kb_response.raise_for_status()
+
+            es_data = es_response.json()
+            kb_data = kb_response.json()
+
+            es_health_summary = {
+                "Master Stability": es_data.get("indicators", {}).get("master_is_stable", {}).get("status", "N/A"),
+                "Shards Availability": es_data.get("indicators", {}).get("shards_availability", {}).get("status", "N/A"),
+                "Disk": es_data.get("indicators", {}).get("disk", {}).get("status", "N/A"),
+                # ... add other fields as needed ...
+            }
+
+            # Extract Kibana overall status
+            kb_overall_status = kb_data.get("status", {}).get("overall", {}).get("level", "N/A")
+
+            combined_data = {
+                "cluster_identifier": cluster,
+                "elasticsearch_health": es_health_summary,
+                "kibana_status": kb_overall_status
+            }
+
+            results.append(combined_data)
+        except requests.RequestException as e:
+            print(f"Error fetching data for cluster {cluster}: {e}")
+
+    template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Elasticsearch and Kibana Status Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .available { color: green; }
+            .not_available { color: red; }
+        </style>
+    </head>
+    <body>
+        <h2>Elasticsearch and Kibana Status Report as of {{ today_date }}</h2>
+        <table>
+            <tr>
+                <th>Cluster Identifier</th>
+                <th>Elasticsearch Health Report</th>
+                <th>Kibana Status</th>
+            </tr>
+            {% for data in results %}
+            <tr>
+                <td>{{ data.cluster_identifier }}</td>
+                <td>
+                    <ul>
+                        {% for key, value in data.elasticsearch_health.items() %}
+                            <li>{{ key }}: <span class="{{ 'available' if value == 'green' else 'not_available' }}">{{ value }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td><span class="{{ 'available' if data.kibana_status == 'available' else 'not_available' }}">{{ data.kibana_status }}</span></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+    </html>
+    """
+
+    return render_template_string(template, results=results, today_date=today_date)
+
+if __name__ == "__main__":
+    app.run(debug=True)
