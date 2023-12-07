@@ -23,3 +23,20 @@ GET .monitoring-es-*/_search
                 "SLM Status": es_data.get("indicators", {}).get("slm", {}).get("status", "N/A"),
                 "ILM Status": es_data.get("indicators", {}).get("ilm", {}).get("status", "N/A"),
                 # ... add other fields as needed ...
+
+
+It sounds like you want to communicate with Eric about a situation where management is asking you to resign due to technical reasons related to five tasks, which you believe were completed on time. You also want to involve Eric in verifying the accuracy of the report. Here's a suggested message you could send to Eric:
+
+Subject: Clarification and Verification Needed Regarding My Resignation Request
+
+Dear Eric,
+
+I hope this message finds you well. I am writing to discuss an important matter that has recently come to my attention. I have been informed by the management that they are requesting my resignation from our India operations. The reason cited is related to technical issues concerning the completion of five specific tasks.
+
+I would like to point out that, to the best of my knowledge and records, these tasks have been completed within the stipulated time frame. I believe there might be a misunderstanding or an error in the report that was presented to the management.
+
+Given the seriousness of this situation, I feel it is crucial to have an accurate and fair assessment of the work done. Therefore, I am reaching out to you to request your assistance in verifying the details of these tasks. Your insight and input would be invaluable in ensuring that all facts are correctly represented.
+
+While I am open to the idea of resigning if it is in the best interest of the company, I would prefer not to do so based on an inaccurate report. I believe in maintaining professional integrity and would like to ensure that any decision made is based on correct and verified information.
+
+I would greatly appreciate it if we could schedule a meeting to discuss this matter further. Your support in this matter is crucial, and I am hopeful that we can resolve this issue amicably and professionally.
