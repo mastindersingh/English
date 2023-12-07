@@ -13,3 +13,13 @@ GET .monitoring-es-*/_search
   ],
   "_source": ["timestamp", "node_stats.node_id", "node_stats.breakers"]
 }
+
+
+"Master Stability": es_data.get("indicators", {}).get("master_is_stable", {}).get("status", "N/A"),
+                "Repository Integrity": es_data.get("indicators", {}).get("repository_integrity", {}).get("status", "N/A"),
+                "Shards Availability": es_data.get("indicators", {}).get("shards_availability", {}).get("status", "N/A"),
+                "Disk": es_data.get("indicators", {}).get("disk", {}).get("status", "N/A"),
+                "Shards Capacity": es_data.get("indicators", {}).get("shards_capacity", {}).get("status", "N/A"),
+                "SLM Status": es_data.get("indicators", {}).get("slm", {}).get("status", "N/A"),
+                "ILM Status": es_data.get("indicators", {}).get("ilm", {}).get("status", "N/A"),
+                # ... add other fields as needed ...
