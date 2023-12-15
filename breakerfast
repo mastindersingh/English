@@ -16,9 +16,4 @@ GET .monitoring-es-*/_search
   ],
   "_source": ["timestamp", "node_stats.node_id", "node_stats.breakers"]
 }
-I hope this message finds you well. I wanted to express my appreciation for our conversation on Monday. Our discussion shed light on some aspects of the ongoing situation, and I am grateful for your insights.
-As we discussed, I have been actively involved in this project for the past three and a half years. I recently transitioned to this new management which was TI  LOB and now it is merged back to lob which was earlier Lob before the merger happened.
-While I'm fully committed to cooperating with the investigation, I wanted to seek your guidance on a few critical matters. I understand that the investigation's complexity requires a thorough examination of the details. I am ready to provide any necessary documents or information to assist in this process. Please feel free to let me know if there are specific documents or details that you believe would be helpful.
-One of my primary concerns relates to my current status during the investigation. I want to ensure that I receive clear guidance regarding my employment. Specifically, I want to understand if there is any risk of termination during the course of this investigation. It is essential to me that my ID remains active, and my email access is not deactivated, as I would like to continue contributing to the project without unnecessary interruptions.
-I have noticed that most communication related to this matter has occurred via phone calls rather than formal email communication.  I believe that having clear, documented guidance in writing would be highly beneficial for all parties involved. It appears that there may be some miscommunication or misunderstanding, especially within the Indian HR team. Having written instructions and guidance would help alleviate any potential confusion.
-I want to reiterate my commitment to a fair and transparent resolution to this situation. Your guidance and clarity on these matters would greatly assist me in navigating this challenging period.
+
