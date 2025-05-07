@@ -1,3 +1,83 @@
+
+# KPI Query Submission Guide
+
+This guide helps you understand what types of queries you can submit to the KPI automation system. You can use **JIRA (JQL)**, **MSSQL**, or **PostgreSQL** queries.
+
+---
+
+## 1. JIRA Queries (JQL)
+
+- Use to filter issues by project, status, labels, resolution, etc.
+- Use placeholders `{start_date}` and `{end_date}` for dynamic dates.
+
+**Example:**
+```jql
+project = "NTZQ" AND component = "PI_MAINTAIN"
+AND status = "Hygiene"
+AND issuetype IN (Epic, Sub-task)
+AND labels = "PEMAP-1674"
+AND resolutiondate >= "{start_date}"
+AND resolutiondate <= "{end_date}"
+```
+
+---
+
+## 2. MSSQL Queries
+
+- Standard `SELECT` queries with filters and `GROUP BY`.
+- Use column aliases like `AS my_date`, `AS metric_value`.
+
+**Example:**
+```sql
+SELECT cm."APP_ID", cm."STATUS_CD", TRUNC("UPDATE_DT") AS my_date
+FROM "PISI_AUTOMATION"."MA_CM" cm
+JOIN common_lob lob ON cm.app_nm = lob.org_nm
+WHERE cm."STATUS_CD" = 'Closed'
+AND "UPDATE_DT" BETWEEN '{start_date}' AND '{end_date}'
+GROUP BY cm."APP_ID", cm."STATUS_CD", TRUNC("UPDATE_DT")
+```
+
+---
+
+## 3. PostgreSQL Queries
+
+- Use for metrics sourced from Postgres DB.
+- Return metric value, app ID, and date.
+
+**Example:**
+```sql
+SELECT name, COUNT(*) AS count, DATE(created_at) AS my_date
+FROM customer_logins
+WHERE created_at BETWEEN '{start_date}' AND '{end_date}'
+GROUP BY name, DATE(created_at)
+```
+
+---
+
+## Guidelines
+
+- Always include `{start_date}` and `{end_date}` for date filtering.
+- Include `application_id` or org/ticket identifier.
+- Avoid complex or unsafe operations (no INSERT, UPDATE, DELETE).
+- Do not include PII or hardcoded secrets.
+
+---
+
+## What Not to Submit
+
+- No schema-altering commands like `DROP`, `ALTER`
+- No stored procedures or advanced dynamic SQL
+
+---
+
+## How to Submit
+
+1. Prepare your query using the format above.
+2. Submit via the Admin Panel or send it to the responsible admin.
+3. It will be added to the system for scheduled execution.
+
+
+
 flowchart TD
     A[Start Script] --> B[Connect to PostgreSQL]
     B --> C[Fetch KPI Measure List from KPI_MEASURES]
