@@ -1,3 +1,40 @@
+flowchart TD
+    A[Start Script] --> B[Connect to PostgreSQL]
+    B --> C[Fetch KPI Measure List from KPI_MEASURES]
+    C --> D{Datasource Name?}
+
+    %% --- JIRA Branch ---
+    D -->|JIRA| E[JIRA Auth via JiraProxy]
+    E --> F[Execute JQL Query]
+    F --> G[Extract Issue Data]
+    G --> Z[Insert KPI Results into KPI_TRACKING]
+
+    %% --- MSSQL Branch ---
+    D -->|MSSQL| H[Connect to MSSQL]
+    H --> I[Execute SQL Query from KPI_MEASURES.query_text]
+    I --> J[Extract Result Rows]
+    J --> Z
+
+    %% --- PostgreSQL Branch (Optional / Self-query) ---
+    D -->|PostgreSQL| K[Execute Query via PGSQL]
+    K --> Z
+
+    Z --> L[Commit to KPI_TRACKING]
+    L --> M[Close All DB Connections]
+    M --> N[End Script]
+
+    %% --- Supporting Data Tables ---
+    subgraph Data_Tables
+        T1[KPI_MEASURES: Stores query_text & metric_name]
+        T2[KPI_DATASOURCES: Contains JIRA / MSSQL / PG]
+        T3[DATASOURCE_PROPERTIES: Env variable mappings]
+        T4[KPI_TRACKING: Final output results]
+    end
+
+    B --> T1
+    B --> T2
+    B --> T3
+    Z --> T4
 
 Hi Peter,
 
