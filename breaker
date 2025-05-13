@@ -1,3 +1,100 @@
+# Python Project Packaging Guidelines (Wells Fargo)
+
+## Overview
+
+This document defines the standard packaging approach for Python projects within Wells Fargo using either `setuptools` or `poetry`.
+
+---
+
+## Option 1: Setuptools (`setup.cfg` + `pyproject.toml`)
+
+### `setup.cfg`
+```ini
+[metadata]
+name = wellsfargo_1pii_kpi_automation
+version = 1.1.0
+description = A Python project for KPI automation
+
+[options]
+packages = find:
+install_requires =
+    jira
+    psycopg2-binary
+    pymssql
+    pytest
+    pytest-cov
+    coverage
+zip_safe = True
+include_package_data = True
+python_requires = >=3.11
+
+[options.package_data]
+* = README.md
+
+[options.packages.find]
+where = .
+```
+
+### `pyproject.toml`
+```toml
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+```
+
+> ✅ Use this approach when using standard Jenkins or legacy CICD build tools.
+
+---
+
+## Option 2: Poetry-Only (`pyproject.toml`)
+
+```toml
+[tool.poetry]
+name = "wellsfargo_1pii_kpi_automation"
+version = "1.1.0"
+description = "A Python project for KPI automation"
+authors = ["K154844 <mastinder.singh@wellsfargo.com>"]
+readme = "README.md"
+
+packages = [
+  { include = "kpi_automation" }
+]
+
+[[tool.poetry.source]]
+name = "KPI_automation"
+url = "https://artifactory-intg-b2.wellsfargo.net/artifactory/api"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+jira = "^3.4.0"
+psycopg2-binary = "^2.9.5"
+pymssql = "^2.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+```
+
+> ✅ Use this if you manage dependencies with `poetry install`, `poetry lock`, and plan to deploy using Poetry pipelines.
+
+---
+
+## Important Notes
+
+- **Do not mix** `setup.cfg` and `tool.poetry` in the same project.
+- Maintain **semantic versioning** for easier artifact traceability.
+- Always validate syntax (`toml-lint`, `poetry check`, or `python -m build`).
+
+---
+
+Would you like this Confluence content in downloadable `.md` or `.docx` format?
+
+
+
+
+
+
 
 Workplace Experience Platform Services (WXPS) in Wells Fargo – Architecture and Functions
 
