@@ -1,4 +1,15 @@
 
+File	Purpose	Action in Redesign
+main.py	Core orchestrator: controls the full data flow	Keep and refactor to read all configs and SQL dynamically from DB
+confluence.py	Downloads attachments from Confluence	Keep as-is, no change. Uses token, page_id, and returns Excel bytes
+csvParser.py	Parses Excel using pandas, applies mapper/fillNA	Keep, but pass mapper/fillNA from DB (ma_column_mappings, etc.)
+sql_statements.py	Contains all static SQL queries (insert/update)	Replace with ma_sql_statements table to store SQL in DB
+update_db.py	Runs insert/update on MSSQL	Refactor to read SQL dynamically and execute against MSSQL
+update_db_pg.py	Runs insert/update on PostgreSQL	Refactor same as above for Po
+
+
+
+
 Analytics and Reporting Layer (MicroStrategy & Tableau)
 Once data is consolidated in WXPS’s databases, Wells Fargo leverages enterprise business intelligence (BI) tools to visualize and report on this information. The two primary tools in use (as per the context diagram) are MicroStrategy and Tableau. These tools interface with the WXPS Gold DB (and possibly directly with other DBs for certain use cases) to provide dashboards, reports, and analytical capabilities to various stakeholders:
 * MicroStrategy: MicroStrategy is an enterprise BI platform known for its scalable reporting, dashboards, and distribution capabilities
